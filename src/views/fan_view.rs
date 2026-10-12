@@ -1,9 +1,12 @@
+use crate::models::fan_model::FanModel;
 use libadwaita::gio;
 use libadwaita::gio::ListStore;
 use libadwaita::gtk::prelude::*;
-use libadwaita::gtk::{Box, Label, ListView, Orientation, Scale, ScrolledWindow, SignalListItemFactory, SingleSelection};
+use libadwaita::gtk::{
+    Box, Label, ListView, Orientation, Scale, ScrolledWindow, SignalListItemFactory,
+    SingleSelection,
+};
 use libadwaita::prelude::{BoxExt, CastNone, RangeExt, ScaleExt, WidgetExt};
-use crate::models::fan_model::FanModel;
 
 pub fn create_fan_list() -> (ScrolledWindow, ListStore) {
     let model = gio::ListStore::new::<FanModel>();
@@ -27,12 +30,7 @@ pub fn create_fan_list() -> (ScrolledWindow, ListStore) {
         let current = Label::new(None);
         current.set_width_chars(5);
 
-        let scale = Scale::with_range(
-            Orientation::Horizontal,
-            0.0,
-            100.0,
-            1.0
-        );
+        let scale = Scale::with_range(Orientation::Horizontal, 0.0, 100.0, 1.0);
         scale.set_hexpand(true);
         scale.set_draw_value(true);
 
@@ -43,10 +41,7 @@ pub fn create_fan_list() -> (ScrolledWindow, ListStore) {
         let item = list_item.clone();
 
         scale.connect_value_changed(move |scale| {
-            if let Some(fan_model) = item
-                .item()
-                .and_downcast::<FanModel>()
-            {
+            if let Some(fan_model) = item.item().and_downcast::<FanModel>() {
                 // TODO: Implement
                 // fan_model.set_target_speed(u32::from(scale.value()));
             }
@@ -56,38 +51,23 @@ pub fn create_fan_list() -> (ScrolledWindow, ListStore) {
     });
 
     factory.connect_bind(|_, list_item| {
-        let Some(fan) = list_item
-            .item()
-            .and_downcast::<FanModel>()
-        else {
+        let Some(fan) = list_item.item().and_downcast::<FanModel>() else {
             return;
         };
 
-        let Some(row) = list_item
-            .child()
-            .and_downcast::<Box>()
-        else {
+        let Some(row) = list_item.child().and_downcast::<Box>() else {
             return;
         };
 
-        let Some(name) = row
-            .first_child()
-            .and_downcast::<Label>()
-        else {
+        let Some(name) = row.first_child().and_downcast::<Label>() else {
             return;
         };
 
-        let Some(current) = name
-            .next_sibling()
-            .and_downcast::<Label>()
-        else {
+        let Some(current) = name.next_sibling().and_downcast::<Label>() else {
             return;
         };
 
-        let Some(scale) = current
-            .next_sibling()
-            .and_downcast::<Scale>()
-        else {
+        let Some(scale) = current.next_sibling().and_downcast::<Scale>() else {
             return;
         };
 
@@ -101,10 +81,7 @@ pub fn create_fan_list() -> (ScrolledWindow, ListStore) {
 
     let selection = SingleSelection::new(Some(model.clone()));
 
-    let list_view = ListView::new(
-        Some(selection),
-        Some(factory),
-    );
+    let list_view = ListView::new(Some(selection), Some(factory));
 
     let scrolled = ScrolledWindow::builder()
         .child(&list_view)

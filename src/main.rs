@@ -1,17 +1,21 @@
-pub mod views;
 pub mod models;
+pub mod views;
 
-use libadwaita::prelude::*;
-use libadwaita::{ActionRow, Application, ApplicationWindow, ComboRow, HeaderBar, NavigationPage, NavigationSplitView, Sidebar, SidebarItem, SidebarSection, ToolbarView};
-use libadwaita::gtk::{Align, Box, Button, Grid, Label, ListBox, Orientation, ProgressBar, StringList};
-use nvml_wrapper::{Device, Nvml};
-use nvml_wrapper::enum_wrappers::device::{Clock, ClockId};
-use nvml_wrapper::enums::device::FanControlPolicy;
 use crate::models::fan_model::FanModel;
 use crate::views::fan_view::create_fan_list;
+use libadwaita::gtk::{
+    Align, Box, Button, Grid, Label, ListBox, Orientation, ProgressBar, StringList,
+};
+use libadwaita::prelude::*;
+use libadwaita::{
+    ActionRow, Application, ApplicationWindow, ComboRow, HeaderBar, NavigationPage,
+    NavigationSplitView, Sidebar, SidebarItem, SidebarSection, ToolbarView,
+};
+use nvml_wrapper::enum_wrappers::device::{Clock, ClockId};
+use nvml_wrapper::enums::device::FanControlPolicy;
+use nvml_wrapper::{Device, Nvml};
 
-fn main() -> Result<(), std::boxed::Box<dyn std::error::Error>>{
-
+fn main() -> Result<(), std::boxed::Box<dyn std::error::Error>> {
     let application = Application::builder()
         .application_id("com.mads256h.NvidiaOC")
         .build();
@@ -92,19 +96,14 @@ fn main() -> Result<(), std::boxed::Box<dyn std::error::Error>>{
 
         println!("Power limit: {power_limit} W, min: {min} W, max: {max} W");
 
-
         for index in 0..device.num_fans().unwrap() {
             let speed = device.fan_speed(index).unwrap();
             let speed_rpm = device.fan_speed_rpm(index).unwrap();
-            let automatic = device.fan_control_policy(index).unwrap() == FanControlPolicy::TemperatureContinousSw;
+            let automatic = device.fan_control_policy(index).unwrap()
+                == FanControlPolicy::TemperatureContinousSw;
 
             println!("Fan {index}, speed: {speed}, speed_rpm: {speed_rpm}, automatic: {automatic}");
-            fan_model.append(&FanModel::new(
-                index,
-                automatic,
-                speed_rpm,
-                speed_rpm,
-            ));
+            fan_model.append(&FanModel::new(index, automatic, speed_rpm, speed_rpm));
         }
 
         let content_box = Box::new(Orientation::Vertical, 0);
@@ -123,9 +122,8 @@ fn main() -> Result<(), std::boxed::Box<dyn std::error::Error>>{
             .vexpand(true)
             .build();
 
-        let gpu_string_list = StringList::new(
-            &device_names.iter().map(String::as_str).collect::<Vec<_>>()
-        );
+        let gpu_string_list =
+            StringList::new(&device_names.iter().map(String::as_str).collect::<Vec<_>>());
 
         let gpu_selector = ComboRow::builder()
             .title("GPU")
@@ -137,11 +135,15 @@ fn main() -> Result<(), std::boxed::Box<dyn std::error::Error>>{
             .halign(Align::End)
             .build();
 
-
         let footer = Box::new(Orientation::Horizontal, 0);
         footer.append(&gpu_selector);
         // spacer
-        footer.append(&Box::builder().orientation(Orientation::Horizontal).hexpand(true).build());
+        footer.append(
+            &Box::builder()
+                .orientation(Orientation::Horizontal)
+                .hexpand(true)
+                .build(),
+        );
         footer.append(&apply_button);
 
         let content = Box::new(Orientation::Vertical, 0);
@@ -164,13 +166,7 @@ fn main() -> Result<(), std::boxed::Box<dyn std::error::Error>>{
     Ok(())
 }
 
-fn add_metric(
-    grid: &Grid,
-    row: i32,
-    name: &str,
-    value: &str,
-    fraction: f64
-) {
+fn add_metric(grid: &Grid, row: i32, name: &str, value: &str, fraction: f64) {
     let name_label = Label::new(Some(name));
     name_label.set_xalign(0.0);
 
@@ -195,7 +191,10 @@ fn print_device(device: &Device) -> Result<(), std::boxed::Box<dyn std::error::E
     Ok(())
 }
 
-fn print_clock(device: &Device, clock: Clock) -> Result<(), std::boxed::Box<dyn std::error::Error>> {
+fn print_clock(
+    device: &Device,
+    clock: Clock,
+) -> Result<(), std::boxed::Box<dyn std::error::Error>> {
     let current = device.clock(clock, ClockId::Current)?;
 
     let offset = match clock {
