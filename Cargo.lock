@@ -507,15 +507,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "nvidia_oc_gtk"
-version = "0.1.0"
-dependencies = [
- "libadwaita",
- "nvml-wrapper",
- "nvml-wrapper-sys",
-]
-
-[[package]]
 name = "nvml-wrapper"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -536,6 +527,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d2079f4c9b6d2170bfb71c6355734ead6c47da75c179847395c31f9f2f66ede"
 dependencies = [
  "libloading",
+]
+
+[[package]]
+name = "nvogue"
+version = "0.1.0"
+dependencies = [
+ "libadwaita",
+ "nvml-wrapper",
+ "nvml-wrapper-sys",
 ]
 
 [[package]]
