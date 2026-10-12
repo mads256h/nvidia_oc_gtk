@@ -1,0 +1,13 @@
+[package]
+name = "nvogued"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+zbus = { version = "5", features = [ "tokio" ]}
+tokio = { version = "1", features = ["full"] }
+
+nvml-wrapper = "0.13"
+
+nvogue-protocol = { path = "../nvogue-protocol" }
+uuid = { version = "1.28.0", features = ["v4"] }

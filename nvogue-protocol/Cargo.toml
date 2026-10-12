@@ -1,0 +1,11 @@
+[package]
+name = "nvogue-protocol"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+zbus = "5.19"
+
+nvml-wrapper = "0.13"
+
+serde = { version = "1.0", features = ["derive"] }

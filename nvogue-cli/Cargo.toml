@@ -1,0 +1,10 @@
+[package]
+name = "nvogue-cli"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+nvogue-protocol = { path = "../nvogue-protocol" }
+
+zbus = { version = "5", features = [ "tokio" ]}
+tokio = { version = "1", features = ["full"] }
