@@ -1,11 +1,11 @@
 use libadwaita::glib;
 
 mod imp {
-    use std::cell::Cell;
-    use libadwaita::prelude::*;
     use libadwaita::glib;
     use libadwaita::glib::Properties;
+    use libadwaita::prelude::*;
     use libadwaita::subclass::prelude::*;
+    use std::cell::Cell;
 
     #[derive(Properties, Default)]
     #[properties(wrapper_type = super::FanModel)]
@@ -38,11 +38,7 @@ glib::wrapper! {
 }
 
 impl FanModel {
-    pub fn new(
-        fan_index: u32,
-        automatic: bool,
-        current_speed: u32,
-        target_speed: u32) -> Self {
+    pub fn new(fan_index: u32, automatic: bool, current_speed: u32, target_speed: u32) -> Self {
         glib::Object::builder()
             .property("fan_index", fan_index)
             .property("automatic", automatic)
