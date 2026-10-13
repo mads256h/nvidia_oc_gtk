@@ -1,8 +1,7 @@
 use crate::device::{Device, DeviceId};
 use crate::error::Error;
 use crate::overclock::OverclockInfo;
-use std::collections::HashMap;
-use zbus::{interface, proxy};
+use zbus::interface;
 
 pub struct NVogue<T: NVogueServiceImpl + 'static> {
     pub imp: T,

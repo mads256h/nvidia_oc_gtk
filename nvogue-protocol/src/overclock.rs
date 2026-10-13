@@ -1,4 +1,3 @@
-use crate::device::DeviceId;
 use crate::units::{MHz, Watt};
 use serde::{Deserialize, Serialize};
 use zbus::zvariant::Type;
@@ -15,7 +14,7 @@ pub struct OverclockInfo {
     pub power_limit: PowerLimitInfo,
 }
 
-#[derive(Deserialize, Serialize, Type, Eq, PartialEq, Hash, Debug)]
+#[derive(Deserialize, Serialize, Type, Eq, PartialEq, Hash, Debug, Clone)]
 pub struct ClockInfo {
     pub clock_type: ClockType,
     pub min_clock_offset: MHz,
@@ -23,7 +22,18 @@ pub struct ClockInfo {
     pub current_offset: MHz,
 }
 
-#[derive(Deserialize, Serialize, Type, Eq, PartialEq, Hash, Debug)]
+impl ClockInfo {
+    pub fn new_empty(clock_type: ClockType) -> Self {
+        ClockInfo {
+            clock_type,
+            min_clock_offset: MHz(0),
+            max_clock_offset: MHz(0),
+            current_offset: MHz(0),
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize, Type, Eq, PartialEq, Hash, Debug, Copy, Clone)]
 pub enum ClockType {
     Graphics,
     Memory,

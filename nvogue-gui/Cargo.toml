@@ -4,10 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-adw = { version = "0.9", package = "libadwaita", features = ["v1_8"] }
-gtk = { version = "0.11", package = "gtk4", features = ["v4_14"]  }
+relm4 = { version = "0.11", features = [ "libadwaita", "gnome_50" ] }
+relm4-components = "0.11"
+relm4-icons = "0.11"
+
+zbus = { version = "5", features = [ "tokio" ]}
+tokio = { version = "1", features = ["full"] }
 
 nvogue-protocol = { path = "../nvogue-protocol" }
-
-[build-dependencies]
-glib-build-tools = "0.22.8"
