@@ -1,1 +1,1 @@
-pub mod clock_offset_widget;
+pub mod scale_value_widget;

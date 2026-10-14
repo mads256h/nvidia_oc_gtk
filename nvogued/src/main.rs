@@ -114,7 +114,7 @@ fn offset_to_clockinfo(device: &Device, clock_type: ClockType) -> Result<ClockIn
         ClockType::Memory => Clock::Memory,
     };
 
-    let clock_offset = device.clock_offset(Clock::Graphics, PerformanceState::Zero)?;
+    let clock_offset = device.clock_offset(clock, PerformanceState::Zero)?;
 
     Ok(ClockInfo {
         clock_type,

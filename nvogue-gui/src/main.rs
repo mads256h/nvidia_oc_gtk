@@ -1,12 +1,12 @@
 mod widgets;
 
-use crate::widgets::clock_offset_widget::{
-    ClockOffsetInputMsg, ClockOffsetOutputMsg, ClockOffsetWidget,
+use crate::widgets::scale_value_widget::{
+    ScaleValueConfig, ScaleValueInputMessage, ScaleValueOutputMessage, ScaleValueWidget,
 };
 use nvogue_protocol::device::Device;
 use nvogue_protocol::overclock::{ClockInfo, ClockType, OverclockInfo};
 use nvogue_protocol::service::NVogueProxy;
-use nvogue_protocol::units::MHz;
+use nvogue_protocol::units::{MHz, Watt};
 use relm4::adw::prelude::*;
 use relm4::loading_widgets::LoadingWidgets;
 use relm4::prelude::*;
@@ -20,17 +20,20 @@ struct AppModel {
 
     overclock_info: Option<OverclockInfo>,
 
-    graphics_offset_widget: Controller<ClockOffsetWidget>,
-    memory_offset_widget: Controller<ClockOffsetWidget>,
+    graphics_offset_widget: Controller<ScaleValueWidget>,
+    memory_offset_widget: Controller<ScaleValueWidget>,
+    power_limit_widget: Controller<ScaleValueWidget>,
 
     pending_graphics_offset: MHz,
     pending_memory_offset: MHz,
+    pending_power_limit: Watt,
 }
 
 #[derive(Debug)]
 enum AppMsg {
     DeviceSelected(usize),
     ClockOffsetChanged(ClockType, MHz),
+    PowerLimitChanged(Watt),
 }
 
 impl AppModel {
@@ -43,6 +46,16 @@ impl AppModel {
         self.overclock_info.as_ref().unwrap()
     }
 
+    fn clock_info_to_scale_value_config(name: &str, clock_info: &ClockInfo) -> ScaleValueConfig {
+        // TODO: set default and current_offset
+        ScaleValueConfig::new(
+            name,
+            clock_info.current_offset.0 as f64,
+            clock_info.min_clock_offset.0 as f64,
+            clock_info.max_clock_offset.0 as f64,
+        )
+    }
+
     async fn refresh_overclock_info(&mut self) -> Result<(), nvogue_protocol::error::Error> {
         self.overclock_info = Some(
             self.proxy
@@ -51,12 +64,30 @@ impl AppModel {
         );
 
         self.graphics_offset_widget
-            .emit(ClockOffsetInputMsg::ClockInfoChanged(
-                self.get_overclock_info().graphics_clock.clone(),
+            .emit(ScaleValueInputMessage::ModelChanged(
+                Self::clock_info_to_scale_value_config(
+                    "Graphics",
+                    &self.get_overclock_info().graphics_clock,
+                ),
             ));
         self.memory_offset_widget
-            .emit(ClockOffsetInputMsg::ClockInfoChanged(
-                self.get_overclock_info().memory_clock.clone(),
+            .emit(ScaleValueInputMessage::ModelChanged(
+                Self::clock_info_to_scale_value_config(
+                    "Memory",
+                    &self.get_overclock_info().memory_clock,
+                ),
+            ));
+
+        self.power_limit_widget
+            .emit(ScaleValueInputMessage::ModelChanged(ScaleValueConfig::new(
+                "Limit",
+                self.get_overclock_info().power_limit.default_limit.0 as f64,
+                self.get_overclock_info().power_limit.min_limit.0 as f64,
+                self.get_overclock_info().power_limit.max_limit.0 as f64,
+            )));
+        self.power_limit_widget
+            .emit(ScaleValueInputMessage::ValueChanged(
+                self.get_overclock_info().power_limit.current_limit.0 as f64,
             ));
 
         Ok(())
@@ -114,17 +145,35 @@ impl SimpleAsyncComponent for AppModel {
                     set_content = &adw::NavigationPage {
                         set_title: "Content",
 
-                        gtk::Box {
-                            set_orientation: gtk::Orientation::Vertical,
+                        adw::Clamp {
+                            set_maximum_size: 600,
 
-                            append = model.graphics_offset_widget.widget(),
-                            append = model.memory_offset_widget.widget(),
+                            gtk::Box {
+                                set_orientation: gtk::Orientation::Vertical,
+                                set_spacing: 32,
+
+                                adw::PreferencesGroup {
+                                    set_title: "Clock offsets",
+                                    set_description: Some("Specify clock offsets in MHz"),
+
+                                    model.graphics_offset_widget.widget(),
+                                    model.memory_offset_widget.widget(),
+                                },
+
+                                adw::PreferencesGroup {
+                                    set_title: "Power limit",
+                                    set_description: Some("Specify the power limit in Watt"),
+
+                                    model.power_limit_widget.widget(),
+                                }
+                            }
                         }
                     },
                 },
 
                 add_bottom_bar = &gtk::Box {
                     set_orientation: gtk::Orientation::Horizontal,
+                    set_margin_all: 4,
 
                     gtk::Box {
                         set_margin_start: 8,
@@ -173,19 +222,33 @@ impl SimpleAsyncComponent for AppModel {
 
         let devices = proxy.get_devices().await.unwrap();
 
-        let graphics_offset_widget = ClockOffsetWidget::builder()
-            .launch(ClockInfo::new_empty(ClockType::Graphics))
+        let graphics_offset_widget = ScaleValueWidget::builder()
+            .launch(Self::clock_info_to_scale_value_config(
+                "Graphics",
+                &ClockInfo::new_empty(ClockType::Graphics),
+            ))
             .forward(sender.input_sender(), |msg| match msg {
-                ClockOffsetOutputMsg::ClockOffsetChanged(offset) => {
-                    AppMsg::ClockOffsetChanged(ClockType::Graphics, offset)
+                ScaleValueOutputMessage::ValueChanged(offset) => {
+                    AppMsg::ClockOffsetChanged(ClockType::Graphics, MHz(offset as i32))
                 }
             });
 
-        let memory_offset_widget = ClockOffsetWidget::builder()
-            .launch(ClockInfo::new_empty(ClockType::Memory))
+        let memory_offset_widget = ScaleValueWidget::builder()
+            .launch(Self::clock_info_to_scale_value_config(
+                "Memory",
+                &ClockInfo::new_empty(ClockType::Graphics),
+            ))
             .forward(sender.input_sender(), |msg| match msg {
-                ClockOffsetOutputMsg::ClockOffsetChanged(offset) => {
-                    AppMsg::ClockOffsetChanged(ClockType::Memory, offset)
+                ScaleValueOutputMessage::ValueChanged(offset) => {
+                    AppMsg::ClockOffsetChanged(ClockType::Memory, MHz(offset as i32))
+                }
+            });
+
+        let power_limit_widget = ScaleValueWidget::builder()
+            .launch(ScaleValueConfig::new("Limit", 0.0, 0.0, 0.0))
+            .forward(sender.input_sender(), |msg| match msg {
+                ScaleValueOutputMessage::ValueChanged(limit) => {
+                    AppMsg::PowerLimitChanged(Watt(limit as u32))
                 }
             });
 
@@ -196,8 +259,10 @@ impl SimpleAsyncComponent for AppModel {
             overclock_info: None,
             graphics_offset_widget,
             memory_offset_widget,
+            power_limit_widget,
             pending_graphics_offset: MHz(0),
             pending_memory_offset: MHz(0),
+            pending_power_limit: Watt(0),
         };
 
         model.refresh_overclock_info().await.unwrap();
@@ -236,6 +301,7 @@ impl SimpleAsyncComponent for AppModel {
                 ClockType::Graphics => self.pending_graphics_offset = offset,
                 ClockType::Memory => self.pending_memory_offset = offset,
             },
+            AppMsg::PowerLimitChanged(limit) => self.pending_power_limit = limit,
         }
     }
 }
