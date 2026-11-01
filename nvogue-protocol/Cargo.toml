@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-zbus = "5.19"
+zbus = "6.1"
 
 nvml-wrapper = "0.13"
 
